@@ -27,7 +27,7 @@ class AzureBlobArtifactRepository(ArtifactRepository):
             return
 
         from azure.storage.blob import BlobServiceClient
-
+        self.write_timeout = int(os.environ.get("AZURE_BLOB_STORAGE_WRITE_TIMEOUT", 600))
         (_, account, _) = AzureBlobArtifactRepository.parse_wasbs_uri(artifact_uri)
         if "AZURE_STORAGE_CONNECTION_STRING" in os.environ:
             self.client = BlobServiceClient.from_connection_string(
@@ -69,7 +69,7 @@ class AzureBlobArtifactRepository(ArtifactRepository):
             dest_path = posixpath.join(dest_path, artifact_path)
         dest_path = posixpath.join(dest_path, os.path.basename(local_file))
         with open(local_file, "rb") as file:
-            container_client.upload_blob(dest_path, file)
+            container_client.upload_blob(dest_path, file, timeout=self.write_timeout)
 
     def log_artifacts(self, local_dir, artifact_path=None):
         (container, _, dest_path) = self.parse_wasbs_uri(self.artifact_uri)
@@ -86,7 +86,7 @@ class AzureBlobArtifactRepository(ArtifactRepository):
                 remote_file_path = posixpath.join(upload_path, f)
                 local_file_path = os.path.join(root, f)
                 with open(local_file_path, "rb") as file:
-                    container_client.upload_blob(remote_file_path, file)
+                    container_client.upload_blob(remote_file_path, file, timeout=self.write_timeout)
 
     def list_artifacts(self, path=None):
         # Newer versions of `azure-storage-blob` (>= 12.4.0) provide a public
