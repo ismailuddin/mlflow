@@ -7,7 +7,7 @@ from mlflow.entities import FileInfo
 from mlflow.exceptions import MlflowException
 from mlflow.store.artifact.artifact_repo import ArtifactRepository
 
-
+TIMEOUT = 600
 class AzureBlobArtifactRepository(ArtifactRepository):
     """
     Stores artifacts on Azure Blob Storage.
@@ -69,7 +69,7 @@ class AzureBlobArtifactRepository(ArtifactRepository):
             dest_path = posixpath.join(dest_path, artifact_path)
         dest_path = posixpath.join(dest_path, os.path.basename(local_file))
         with open(local_file, "rb") as file:
-            container_client.upload_blob(dest_path, file)
+            container_client.upload_blob(dest_path, file, timeout=TIMEOUT)
 
     def log_artifacts(self, local_dir, artifact_path=None):
         (container, _, dest_path) = self.parse_wasbs_uri(self.artifact_uri)
@@ -86,7 +86,7 @@ class AzureBlobArtifactRepository(ArtifactRepository):
                 remote_file_path = posixpath.join(upload_path, f)
                 local_file_path = os.path.join(root, f)
                 with open(local_file_path, "rb") as file:
-                    container_client.upload_blob(remote_file_path, file)
+                    container_client.upload_blob(remote_file_path, file, timeout=TIMEOUT)
 
     def list_artifacts(self, path=None):
         # Newer versions of `azure-storage-blob` (>= 12.4.0) provide a public
